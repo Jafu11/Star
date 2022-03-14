@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>starfight</title>
+    <link rel="manifest" href="manifest.webmanifest">
+
+    <style>
+        .center {
+            display: flex;
+            justify-content: center;
+        }
+
+        .timer {
+            font-size: 50px;
+            color: #06256e;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .margin {
+            font-size: 20px;
+            color: #57c7a5;
+        }
+
+        .joy {
+            display: flex;
+        }
+
+        .backgrounddark {
+            background-color: #ffffff;
+        }
+
+        .Logo {
+            font-size: 80px;
+            color: #16ca2ebb;
+            font-family: 'Roboto',sans-serif;
+            display: flex;
+            justify-content: center;
+        }
+
+        
+    </style>
+
+
+</head>
+
+<body class="backgrounddark">
+
+    <div class="Logo">starfight</div>
+
+    <div class="center timer" id="timer">
+        03 : 00
+          </div>
+
+          <div><img onclick="shiftSnake(direction= 'UP')" width="65px" height="65px" class="joy" src="img/up.png"></div>
+          <div><img onclick="shiftSnake(direction= 'RIGHT')" width="65px" height="65px" class="joy" src="img/right.png"></div>
+          <div><img onclick="shiftSnake(direction= 'LEFT')"  width="65px" height="65px"  class="joy" src="img/left.png"></div>
+          <div><img onclick="shiftSnake(direction= 'DOWN')" width="65px" height="65px" class="joy" src="img/under.png"></div>
+
+
+    <canvas id="canvas" width="600" height="600"></canvas>
+   
+<script>
+
+    let win = new Audio('win.mp3');
+    let timerstarted = false;
+    
+
+
+   
+   function startTimer() {
+       if(!timerstarted) {
+       let startTime = new Date().getTime();
+       let threeMinutes = 1000 * 60 * 3;
+       let endTime = startTime + threeMinutes;
+
+
+
+       setInterval(function() {
+           let timeLeft = endTime - new Date().getTime();
+
+
+           if(timeLeft > 0) {
+           let minutes = timeLeft / (1000 * 60);
+           minutes = Math.floor(minutes);
+           let seconds = (timeLeft / 1000) % 60;
+           seconds = Math.round(seconds);
+           seconds = ('0' + seconds).slice(-2);
+           let text = '0' + minutes + ' : ' + seconds;
+           timer.innerHTML = text;
+           } else {
+               win.play();
+            timer.innerHTML = ' WIN! '; 
+           }
+       }, 1000);
+       timerstartdet = true;
+       }
+   }
+
+
+     let canvas = document.getElementById('canvas');
+     let ctx = canvas.getContext('2d');
+     let rows = 20;
+     let cols = 20;
+     let snake = [
+         {x: 19,
+          y:3},    
+     ];
+     let joy1 = [
+         {x: 10,
+          y: 20,}
+     ]
+
+     let food;
+    
+     let cellWidth = canvas.width / cols;
+     let cellHeight = canvas.height / rows;
+     let direction = 'LEFT';
+     let foodCollected = false;
+
+     placeFood();
+
+     
+
+     startTimer();
+     setInterval(placeFood, 400);
+     setInterval(gameLoop, 200);
+     
+     document.addEventListener('keydown', keyDown);
+
+
+    draw();
+
+  
+
+    function draw() {
+         ctx.fillStyle = 'darkblue';
+         ctx.fillRect(0, 0, canvas.width, canvas.height);
+         ctx.fillStyle = 'grey';
+        
+         snake.forEach(part => add(part.x, part.y));
+
+         ctx.fillStyle = 'black';
+         add(food.x, food.y); // Food
+
+         ctx.fillStyle = 'green';
+         joy1.forEach(part => add(part.x, part.y));
+
+         requestAnimationFrame(draw);
+
+    }
+
+    function testGameOver(){
+
+         let firstPart = snake[0];
+         let otherParts = snake.slice(1);
+         let duplicatPart = otherParts.find(part => part.x == firstPart.x && part.y == firstPart.y);
+
+
+        // 1. Schlangeläuft gegen die Wand
+        if(snake[0].x < 0 ||
+           snake[0].x > cols -1 ||
+           snake[0].y < 0 ||
+           snake[0].y > rows - 1 ||
+           duplicatPart 
+        ) {
+          testGameOver() 
+        }
+    }
+
+    function placeFood(){
+        let randonX = Math.floor(Math.random() * cols);
+        let randonY = Math.floor(Math.random() * rows);
+
+        food = {x: randonX, y: randonY};
+    }
+
+    function add(x, y) {
+        ctx.fillRect(x * cellWidth, y * cellHeight, cellWidth - 1, cellHeight - 1);
+    }
+
+    function shiftSnake() {
+        for (let i = snake.length - 1; i > 0; i--) {
+             const part = snake[i];
+             const lastPart = snake[i - 1];
+             part.x = lastPart.x;
+             part.y = lastPart.y;
+        }
+    }
+    
+
+    function gameLoop() {
+        testGameOver();
+         if(foodCollected) {
+             snake = [{
+               x: snake[0].x,
+               y: snake[0].y
+               }, ...snake ];
+
+               foodCollected = false;
+
+         }
+
+         
+        shiftSnake(); 
+         
+         
+         if (direction == 'LEFT') {
+            snake[0].x--;
+         }
+
+         if (direction == 'RIGHT') {
+            snake[0].x++;
+         }
+
+         if (direction == 'UP') {
+            snake[0].y--;
+         }
+
+         if (direction == 'DOWN') {
+            snake[0].y++;
+         }
+
+         if(snake[0].x == food.x &&
+          snake[0].y == food.y) {
+            snake = [
+         {x: 19,
+          y:3},    
+     ];
+     direction = 'RIGHT';   
+         }
+       }
+
+       function keyDown(e) {
+   if (e.keyCode == 37) {
+       direction = 'LEFT';
+   }
+   if (e.keyCode == 38) {
+       direction = 'UP';
+   }
+   if (e.keyCode == 39) {
+       direction = 'RIGHT';
+   }
+   if (e.keyCode == 40) {
+       direction = 'DOWN';
+   }
+       }
+
+    
+   
+   
+</script>
+    
+
+
+</body></html>
